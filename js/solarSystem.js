@@ -4,9 +4,8 @@ import { CELESTIAL_DATA, PLANET_ORDER } from "./planets.js";
 const EARTH_DIAMETER_KM = CELESTIAL_DATA.earth.diameterKm;
 const AU_KM = 149600000;
 
-// Unit dasar untuk skala visual (dikompresi, BUKAN skala literal)
 const EARTH_VISUAL_RADIUS = 2.2;
-const ORBIT_SCALE = 34; // dikalikan sqrt(jarak dalam AU)
+const ORBIT_SCALE = 34;
 const MIN_PLANET_RADIUS = 1.15;
 
 function visualRadiusFor(diameterKm) {
@@ -53,7 +52,6 @@ export class SolarSystem {
     sunLight.position.set(0, 0, 0);
     this.scene.add(sunLight);
 
-    // Cahaya pengisi lembut agar sisi gelap planet tidak hitam total
     const fill = new THREE.HemisphereLight(0xf7f6f2, 0xd9dde1, 0.35);
     this.scene.add(fill);
   }

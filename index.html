@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Solar System 3D — Kelompok 5</title>
+  <meta name="description" content="Jelajahi Tata Surya melalui simulasi 3D interaktif langsung dari browser." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#quick-nav">Lompat ke navigasi planet</a>
+
+  <div id="app">
+
+    <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
+      <div class="loading-orbit" aria-hidden="true"></div>
+      <p>Menyiapkan Tata Surya…</p>
+    </div>
+
+    <canvas id="scene-canvas" aria-label="Simulasi 3D Tata Surya. Gunakan navigasi planet untuk berpindah tanpa menyentuh kanvas."></canvas>
+
+    <header class="top-bar">
+      <div class="top-bar__brand">
+        <h1>Tata Surya 3D</h1>
+        <span>Simulasi interaktif</span>
+      </div>
+      <div class="top-bar__actions">
+        <button class="icon-btn" id="btn-music-toggle" type="button" aria-pressed="true" aria-label="Jeda musik latar">
+          <svg id="icon-music" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 18V6l11-2v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6.5" cy="18" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="17.5" cy="16" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-info-toggle" type="button" aria-pressed="false" aria-label="Tentang website ini">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <audio id="bg-music" src="assets/audio/background-music.mp3" loop preload="auto"></audio>
+
+    <button class="control-btn" id="btn-enable-music" type="button" hidden
+      style="position:absolute; top: calc(var(--header-height) + 10px); right: 20px; z-index: 45; background:#fff; border:1px solid var(--color-border-1); box-shadow: var(--shadow-control);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V6l11-2v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="16" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="label-text">Putar musik</span>
+    </button>
+
+    <p class="scale-disclaimer" id="scale-disclaimer">
+      Skala visual disederhanakan untuk memudahkan eksplorasi. Data astronomi menggunakan nilai sebenarnya.
+    </p>
+
+    <nav class="quick-nav" id="quick-nav" aria-label="Navigasi cepat objek Tata Surya">
+      <span class="quick-nav__label">Objek</span>
+    </nav>
+    <p class="gesture-hint" id="gesture-hint">Seret untuk memutar · gulir untuk memperbesar</p>
+    <div class="control-panel" role="group" aria-label="Kontrol simulasi">
+      <button class="control-btn" id="btn-play-pause" type="button" aria-pressed="true" aria-label="Jeda simulasi">
+        <svg id="icon-play-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>
+        </svg>
+        <span class="label-text">Jeda</span>
+      </button>
+
+      <div class="control-divider" aria-hidden="true"></div>
+
+      <div class="speed-group" role="group" aria-label="Kecepatan orbit">
+        <button class="speed-btn" data-speed="0.5" type="button" aria-pressed="false">0.5×</button>
+        <button class="speed-btn" data-speed="1" type="button" aria-pressed="true">1×</button>
+        <button class="speed-btn" data-speed="2" type="button" aria-pressed="false">2×</button>
+        <button class="speed-btn" data-speed="5" type="button" aria-pressed="false">5×</button>
+        <button class="speed-btn" data-speed="10" type="button" aria-pressed="false">10×</button>
+      </div>
+
+      <div class="control-divider" aria-hidden="true"></div>
+
+      <button class="control-btn" id="btn-view-all" type="button" aria-label="Lihat seluruh Tata Surya">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span class="label-text">Semua</span>
+      </button>
+
+      <button class="control-btn" id="btn-reset-view" type="button" aria-label="Reset tampilan kamera">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M21 4v5h-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="label-text">Reset</span>
+      </button>
+    </div>
+
+    <div class="legend" aria-label="Legenda simbol">
+      <div class="legend__title">Legenda</div>
+      <div class="legend__row"><span class="legend__swatch" style="background:#F4B942"></span>Matahari</div>
+      <div class="legend__row"><span class="legend__swatch" style="background:#536779"></span>Planet</div>
+      <div class="legend__row"><span class="legend__swatch is-line"></span>Jalur orbit</div>
+      <div class="legend__row"><span class="legend__swatch is-belt"></span>Sabuk asteroid</div>
+    </div>
+
+    <aside class="info-panel" id="info-panel" aria-label="Informasi objek terpilih" aria-hidden="true">
+      <div class="info-panel__grabber" aria-hidden="true"></div>
+      <div class="info-panel__topbar">
+        <div>
+          <p class="info-panel__order" id="panel-order">Planet ke-3 dari Matahari</p>
+        </div>
+        <button class="info-panel__close" id="btn-panel-close" type="button" aria-label="Tutup panel informasi">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="info-panel__scroll">
+        <h2 class="info-panel__title" id="panel-title">Bumi</h2>
+        <p class="info-panel__tagline" id="panel-tagline">Rumah bagi kehidupan</p>
+
+        <div class="info-panel__photo" id="panel-photo">
+          <div class="info-panel__photo-skeleton" id="panel-photo-skeleton"></div>
+          <img id="panel-photo-img" src="" alt="" hidden />
+          <div class="info-panel__photo-credit" id="panel-photo-credit" hidden></div>
+        </div>
+
+        <div class="info-panel__section">
+          <h3 id="panel-about-heading">Tentang</h3>
+          <p id="panel-about"></p>
+        </div>
+
+        <div class="info-panel__section">
+          <h3>Data Utama</h3>
+          <dl class="data-grid" id="panel-data-grid"></dl>
+        </div>
+
+        <div class="info-panel__section" id="panel-features-section">
+          <h3 id="panel-features-heading">Ciri-ciri</h3>
+          <ul class="feature-list" id="panel-features"></ul>
+        </div>
+
+        <div class="info-panel__section">
+          <h3>Tahukah Kamu?</h3>
+          <ul class="fact-list" id="panel-facts"></ul>
+        </div>
+      </div>
+    </aside>
+
+    <span class="visually-hidden" id="sr-announcer" role="status" aria-live="polite"></span>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
